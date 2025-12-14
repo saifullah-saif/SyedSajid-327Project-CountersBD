@@ -37,19 +37,26 @@ import {
 import { DollarSign, Users, Calendar, Ticket, Loader2 } from "lucide-react";
 import axios from "axios";
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
+const COLORS = [
+  "#0088FE",
+  "#00C49F",
+  "#FFBB28",
+  "#FF8042",
+  "#8884d8",
+  "#82ca9d",
+];
 
 export default function SalesAnalyticsPage() {
   const { data: session } = useSession();
   const { toast } = useToast();
   const [selectedEventId, setSelectedEventId] = useState(null);
-  
+
   // State for data
   const [overview, setOverview] = useState(null);
   const [eventData, setEventData] = useState([]);
   const [monthlyRevenueData, setMonthlyRevenueData] = useState([]);
   const [genreRevenue, setGenreRevenue] = useState([]);
-  
+
   // Loading states
   const [loadingOverview, setLoadingOverview] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
@@ -113,7 +120,9 @@ export default function SalesAnalyticsPage() {
     const fetchMonthlyRevenue = async () => {
       try {
         setLoadingMonthly(true);
-        const response = await axios.get("/api/organizer/analytics/monthly-revenue");
+        const response = await axios.get(
+          "/api/organizer/analytics/monthly-revenue"
+        );
         if (response.data.success) {
           setMonthlyRevenueData(response.data.data);
         }
@@ -139,7 +148,9 @@ export default function SalesAnalyticsPage() {
     const fetchGenreRevenue = async () => {
       try {
         setLoadingGenre(true);
-        const response = await axios.get("/api/organizer/analytics/genre-revenue");
+        const response = await axios.get(
+          "/api/organizer/analytics/genre-revenue"
+        );
         if (response.data.success) {
           setGenreRevenue(response.data.data);
         }
@@ -178,7 +189,8 @@ export default function SalesAnalyticsPage() {
     }));
   }, [selectedEvent]);
 
-  const isLoading = loadingOverview || loadingEvents || loadingMonthly || loadingGenre;
+  const isLoading =
+    loadingOverview || loadingEvents || loadingMonthly || loadingGenre;
 
   return (
     <DashboardLayout>
@@ -386,7 +398,10 @@ export default function SalesAnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Select onValueChange={setSelectedEventId} disabled={loadingEvents}>
+              <Select
+                onValueChange={setSelectedEventId}
+                disabled={loadingEvents}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select an event" />
                 </SelectTrigger>

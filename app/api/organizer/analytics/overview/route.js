@@ -134,7 +134,11 @@ export async function GET(request) {
   } catch (error) {
     console.error("Error fetching analytics overview:", error);
     return NextResponse.json(
-      { success: false, message: "Internal server error", error: error.message },
+      {
+        success: false,
+        message: "Internal server error",
+        error: error.message,
+      },
       { status: 500 }
     );
   }
