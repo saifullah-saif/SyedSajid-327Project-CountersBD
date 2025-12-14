@@ -16,7 +16,6 @@ import {
   TrendingUp,
   TrendingDown,
   Plus,
-  QrCode,
   Loader2,
 } from "lucide-react";
 

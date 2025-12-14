@@ -19,7 +19,7 @@ import {
   Calendar,
   TrendingUp,
   Users,
-  QrCode,
+  TicketIcon,
   Settings,
   LogOut,
   User,
@@ -28,7 +28,6 @@ import {
   X,
 } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
-
 
 const sidebarItems = [
   {
@@ -43,19 +42,26 @@ const sidebarItems = [
     icon: Calendar,
     href: "/organizer-dashboard/events",
   },
-  {
-    id: "sales",
-    label: "Sales by Events",
-    icon: TrendingUp,
-    href: "/organizer-dashboard/analytics",
-  },
+  // {
+  //   id: "sales",
+  //   label: "Sales by Events",
+  //   icon: TrendingUp,
+  //   href: "/organizer-dashboard/analytics",
+  // },
   {
     id: "attendees",
     label: "Attendees",
     icon: Users,
     href: "/organizer-dashboard/attendees",
   },
-  
+
+  {
+    id: "verify",
+    label: "Verify Tickets",
+    icon: TicketIcon,
+    href: "/organizer-dashboard/scanner",
+  },
+
   {
     id: "settings",
     label: "Settings",

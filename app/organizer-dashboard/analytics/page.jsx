@@ -1,5 +1,7 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/dashboard/dashboard-layout";
 import {
   Card,
@@ -32,93 +34,151 @@ import {
   RadialBarChart,
   RadialBar,
 } from "recharts";
-import { DollarSign, Users, Calendar, Ticket } from "lucide-react";
+import { DollarSign, Users, Calendar, Ticket, Loader2 } from "lucide-react";
+import axios from "axios";
 
-const mockEventData = [
-  {
-    id: "e1",
-    name: "Summer Beats Festival",
-    revenue: 15400,
-    genre: "Music",
-    ticketTypes: { VIP: 5000, General: 10400 },
-  },
-  {
-    id: "e2",
-    name: "Tech Innovate 2025",
-    revenue: 9700,
-    genre: "Tech",
-    ticketTypes: { "Early Bird": 2000, Standard: 7700 },
-  },
-  {
-    id: "e3",
-    name: "Art & Soul Exhibition",
-    revenue: 7200,
-    genre: "Art",
-    ticketTypes: { Member: 3000, Public: 4200 },
-  },
-  {
-    id: "e4",
-    name: "Foodie Fest",
-    revenue: 12500,
-    genre: "Food",
-    ticketTypes: { "Tasting Pass": 8000, "General Admission": 4500 },
-  },
-];
-
-const monthlyRevenueData = [
-  { month: "Jan", revenue: 12000 },
-  { month: "Feb", revenue: 18000 },
-  { month: "Mar", revenue: 15000 },
-  { month: "Apr", revenue: 22000 },
-  { month: "May", revenue: 25000 },
-  { month: "Jun", revenue: 30000 },
-];
-
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
 
 export default function SalesAnalyticsPage() {
+  const { data: session } = useSession();
+  const { toast } = useToast();
   const [selectedEventId, setSelectedEventId] = useState(null);
+  
+  // State for data
+  const [overview, setOverview] = useState(null);
+  const [eventData, setEventData] = useState([]);
+  const [monthlyRevenueData, setMonthlyRevenueData] = useState([]);
+  const [genreRevenue, setGenreRevenue] = useState([]);
+  
+  // Loading states
+  const [loadingOverview, setLoadingOverview] = useState(true);
+  const [loadingEvents, setLoadingEvents] = useState(true);
+  const [loadingMonthly, setLoadingMonthly] = useState(true);
+  const [loadingGenre, setLoadingGenre] = useState(true);
+
+  // Fetch overview stats
+  useEffect(() => {
+    const fetchOverview = async () => {
+      try {
+        setLoadingOverview(true);
+        const response = await axios.get("/api/organizer/analytics/overview");
+        if (response.data.success) {
+          setOverview(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching overview:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load analytics overview",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingOverview(false);
+      }
+    };
+
+    if (session?.user) {
+      fetchOverview();
+    }
+  }, [session]);
+
+  // Fetch event data
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoadingEvents(true);
+        const response = await axios.get("/api/organizer/analytics/events");
+        if (response.data.success) {
+          setEventData(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load event analytics",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingEvents(false);
+      }
+    };
+
+    if (session?.user) {
+      fetchEvents();
+    }
+  }, [session]);
+
+  // Fetch monthly revenue
+  useEffect(() => {
+    const fetchMonthlyRevenue = async () => {
+      try {
+        setLoadingMonthly(true);
+        const response = await axios.get("/api/organizer/analytics/monthly-revenue");
+        if (response.data.success) {
+          setMonthlyRevenueData(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching monthly revenue:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load monthly revenue",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingMonthly(false);
+      }
+    };
+
+    if (session?.user) {
+      fetchMonthlyRevenue();
+    }
+  }, [session]);
+
+  // Fetch genre revenue
+  useEffect(() => {
+    const fetchGenreRevenue = async () => {
+      try {
+        setLoadingGenre(true);
+        const response = await axios.get("/api/organizer/analytics/genre-revenue");
+        if (response.data.success) {
+          setGenreRevenue(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching genre revenue:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load genre analytics",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingGenre(false);
+      }
+    };
+
+    if (session?.user) {
+      fetchGenreRevenue();
+    }
+  }, [session]);
+
+  // const selectedEvent = useMemo(
+  //   () => eventData.find((event) => event.id === selectedEventId),
+  //   [selectedEventId, eventData]
+  // );
 
   const selectedEvent = useMemo(
-    () => mockEventData.find((event) => event.id === selectedEventId),
-    [selectedEventId]
+    () => eventData.find((event) => event.id === selectedEventId),
+    [selectedEventId, eventData]
   );
-
-  const totalRevenue = useMemo(
-    () => mockEventData.reduce((acc, event) => acc + event.revenue, 0),
-    []
-  );
-
-  const topSellingEvent = useMemo(
-    () =>
-      mockEventData.reduce((prev, current) =>
-        prev.revenue > current.revenue ? prev : current
-      ),
-    []
-  );
-
-  const genreRevenue = useMemo(() => {
-    const revenueByGenre = {};
-    mockEventData.forEach((event) => {
-      if (revenueByGenre[event.genre]) {
-        revenueByGenre[event.genre] += event.revenue;
-      } else {
-        revenueByGenre[event.genre] = event.revenue;
-      }
-    });
-    return Object.entries(revenueByGenre).map(([name, value]) => ({
-      name,
-      value,
-    }));
-  }, []);
 
   const ticketTypeData = useMemo(() => {
     if (!selectedEvent) return [];
     return Object.entries(selectedEvent.ticketTypes).map(([name, value]) => ({
       name,
-      value,
+      value: parseFloat(value.toFixed(2)),
     }));
   }, [selectedEvent]);
+
+  const isLoading = loadingOverview || loadingEvents || loadingMonthly || loadingGenre;
 
   return (
     <DashboardLayout>
@@ -135,9 +195,13 @@ export default function SalesAnalyticsPage() {
               <DollarSign className="h-4 w-4 text-zinc-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">
-                ${totalRevenue.toLocaleString()}
-              </div>
+              {loadingOverview ? (
+                <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+              ) : (
+                <div className="text-2xl font-bold text-white">
+                  ${overview?.totalRevenue?.toLocaleString() || 0}
+                </div>
+              )}
             </CardContent>
           </Card>
           <Card className="bg-zinc-900 border-accent">
@@ -148,7 +212,13 @@ export default function SalesAnalyticsPage() {
               <Ticket className="h-4 w-4 text-zinc-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">$45.50</div>
+              {loadingOverview ? (
+                <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+              ) : (
+                <div className="text-2xl font-bold text-white">
+                  ${overview?.avgRevenuePerTicket?.toFixed(2) || "0.00"}
+                </div>
+              )}
             </CardContent>
           </Card>
           <Card className="bg-zinc-900 border-accent">
@@ -159,9 +229,13 @@ export default function SalesAnalyticsPage() {
               <Calendar className="h-4 w-4 text-zinc-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">
-                {topSellingEvent.name}
-              </div>
+              {loadingOverview ? (
+                <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+              ) : (
+                <div className="text-2xl font-bold text-white truncate">
+                  {overview?.topSellingEvent || "N/A"}
+                </div>
+              )}
             </CardContent>
           </Card>
           <Card className="bg-zinc-900 border-accent">
@@ -172,7 +246,13 @@ export default function SalesAnalyticsPage() {
               <Users className="h-4 w-4 text-zinc-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">5,230</div>
+              {loadingOverview ? (
+                <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+              ) : (
+                <div className="text-2xl font-bold text-white">
+                  {overview?.totalTicketsSold?.toLocaleString() || 0}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -184,26 +264,36 @@ export default function SalesAnalyticsPage() {
               <CardTitle className="text-white">Revenue by Month</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={monthlyRevenueData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="month" stroke="#9CA3AF" />
-                  <YAxis stroke="#9CA3AF" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1F2937",
-                      borderColor: "#374151",
-                    }}
-                  />
-                  <Legend wrapperStyle={{ color: "#9CA3AF" }} />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#8884d8"
-                    activeDot={{ r: 8 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {loadingMonthly ? (
+                <div className="flex items-center justify-center h-[300px]">
+                  <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
+                </div>
+              ) : monthlyRevenueData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={monthlyRevenueData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis dataKey="month" stroke="#9CA3AF" />
+                    <YAxis stroke="#9CA3AF" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#1F2937",
+                        borderColor: "#374151",
+                      }}
+                    />
+                    <Legend wrapperStyle={{ color: "#9CA3AF" }} />
+                    <Line
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="#8884d8"
+                      activeDot={{ r: 8 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-[300px] text-zinc-500">
+                  No revenue data available
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -212,21 +302,31 @@ export default function SalesAnalyticsPage() {
               <CardTitle className="text-white">Revenue by Event</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={mockEventData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="name" stroke="#9CA3AF" />
-                  <YAxis stroke="#9CA3AF" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1F2937",
-                      borderColor: "#374151",
-                    }}
-                  />
-                  <Legend wrapperStyle={{ color: "#9CA3AF" }} />
-                  <Bar dataKey="revenue" fill="#82ca9d" />
-                </BarChart>
-              </ResponsiveContainer>
+              {loadingEvents ? (
+                <div className="flex items-center justify-center h-[300px]">
+                  <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
+                </div>
+              ) : eventData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={eventData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis dataKey="name" stroke="#9CA3AF" />
+                    <YAxis stroke="#9CA3AF" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#1F2937",
+                        borderColor: "#374151",
+                      }}
+                    />
+                    <Legend wrapperStyle={{ color: "#9CA3AF" }} />
+                    <Bar dataKey="revenue" fill="#82ca9d" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-[300px] text-zinc-500">
+                  No events data available
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -237,33 +337,44 @@ export default function SalesAnalyticsPage() {
               <CardTitle className="text-white">Revenue by Genre</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={genreRevenue}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {genreRevenue.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1F2937",
-                      borderColor: "#374151",
-                    }}
-                  />
-                  <Legend wrapperStyle={{ color: "#9CA3AF" }} />
-                </PieChart>
-              </ResponsiveContainer>
+              {loadingGenre ? (
+                <div className="flex items-center justify-center h-[300px]">
+                  <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
+                </div>
+              ) : genreRevenue.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={genreRevenue}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label
+                    >
+                      {genreRevenue.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#1F2937",
+                        borderColor: "#374151",
+                      }}
+                    />
+                    <Legend wrapperStyle={{ color: "#9CA3AF" }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-[300px] text-zinc-500">
+                  No genre data available
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -275,12 +386,12 @@ export default function SalesAnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Select onValueChange={setSelectedEventId}>
+              <Select onValueChange={setSelectedEventId} disabled={loadingEvents}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select an event" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockEventData.map((event) => (
+                  {eventData.map((event) => (
                     <SelectItem key={event.id} value={event.id}>
                       {event.name}
                     </SelectItem>
@@ -288,7 +399,7 @@ export default function SalesAnalyticsPage() {
                 </SelectContent>
               </Select>
 
-              {selectedEvent && (
+              {selectedEvent && ticketTypeData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={240} className="mt-6">
                   <RadialBarChart
                     cx="50%"
@@ -320,7 +431,11 @@ export default function SalesAnalyticsPage() {
                     />
                   </RadialBarChart>
                 </ResponsiveContainer>
-              )}
+              ) : selectedEvent ? (
+                <div className="flex items-center justify-center h-[240px] mt-6 text-zinc-500">
+                  No ticket type data available
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         </div>

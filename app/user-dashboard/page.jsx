@@ -17,10 +17,10 @@ import {
   Clock,
   MapPin,
   Download,
-  QrCode,
   Edit,
   LogOut,
   Heart,
+  TicketIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
@@ -145,7 +145,7 @@ export default function DashboardPage() {
     }
   };
 
-  const showTicketQR = (ticket) => {
+  const showTicketDetails = (ticket) => {
     setSelectedTicket(ticket);
   };
 
@@ -345,10 +345,10 @@ export default function DashboardPage() {
                                   variant="outline"
                                   size="sm"
                                   className="flex-1 text-xs py-1 h-auto bg-zinc-600 border-zinc-500 hover:bg-zinc-500"
-                                  onClick={() => showTicketQR(ticket)}
+                                  onClick={() => setSelectedTicket(ticket)}
                                 >
-                                  <QrCode size={12} className="mr-1" />
-                                  View QR
+                                  <TicketIcon size={12} className="mr-1" />
+                                  View Details
                                 </Button>
                                 <Button
                                   variant="outline"
@@ -479,10 +479,10 @@ export default function DashboardPage() {
                                   variant="outline"
                                   size="sm"
                                   className="flex-1 text-xs py-1 h-auto bg-zinc-600 border-zinc-500 hover:bg-zinc-500"
-                                  onClick={() => showTicketQR(ticket)}
+                                  onClick={() => setSelectedTicket(ticket)}
                                 >
-                                  <QrCode size={12} className="mr-1" />
-                                  View QR
+                                  <TicketIcon size={12} className="mr-1" />
+                                  View Details
                                 </Button>
                                 <Button
                                   variant="outline"
@@ -523,17 +523,9 @@ export default function DashboardPage() {
               {console.log(selectedTicket)}
             </h3>
 
-            <div className="bg-white p-6 rounded-lg mb-4">
-              <div className="flex justify-center">
-                <div className="w-48 h-48">
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${selectedTicket.passId}&color=dc2626`}
-                    alt="Ticket QR Code"
-                    className="w-full h-full"
-                  />
-                </div>
-              </div>
-              <p className="text-center text-black font-mono mt-2">
+            <div className="text-center">
+              <p className="text-sm text-zinc-400 mb-2">Pass ID</p>
+              <p className="text-center text-white font-mono text-lg font-bold">
                 {selectedTicket.passId}
               </p>
             </div>

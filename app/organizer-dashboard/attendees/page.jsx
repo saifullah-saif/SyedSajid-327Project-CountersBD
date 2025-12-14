@@ -308,7 +308,7 @@ export default function AttendeesPage() {
         Name: attendee.name,
         Email: attendee.email,
         Phone: attendee.phone,
-        "Ticket QR": attendee.pass_id,
+        "Pass ID": attendee.pass_id,
         "Ticket Type": attendee.ticket_type,
         "Ticket Category": attendee.ticket_category,
         Event: attendee.event_title,
@@ -316,8 +316,6 @@ export default function AttendeesPage() {
         "Check-in Status":
           attendee.verification_status === "verified" ? "Verified" : "Pending",
         "Verification Time": formatDate(attendee.verification_time),
-
-        "QR Code": attendee.pass_id,
       }));
 
       // Convert to CSV

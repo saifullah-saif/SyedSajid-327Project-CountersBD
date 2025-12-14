@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongo";
 import { createClient } from "@supabase/supabase-js";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
-import passId from "passId";
 import mongoose from "mongoose";
 import { generateTicketsForOrder } from "@/lib/ticketGenerationService";
 
@@ -25,7 +24,7 @@ const getModels = () => {
 };
 
 /**
- * Generate a unique 12-character URL-encoded QR code
+ * Generate a unique 12-character URL-encoded pass ID
  * Contains eventId, ticketId, ticketTypeId encoded in a compact format
  */
 function generatepassId(eventId, ticketId, ticketTypeId) {
@@ -145,12 +144,20 @@ async function generateTicketPDF(ticket, event, ticketType, categoryName) {
       });
     }
 
-    // Add QR code text below image
-    firstPage.drawText(decodeURIComponent(ticket.pass_id), {
-      x: 420,
-      y: height - 810,
-      size: 12,
+    // Add pass ID text
+    firstPage.drawText("Pass ID:", {
+      x: 390,
+      y: height - 765,
+      size: 10,
       font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+
+    firstPage.drawText(decodeURIComponent(ticket.pass_id), {
+      x: 390,
+      y: height - 790,
+      size: 14,
+      font: font,
       color: rgb(0, 0, 0),
     });
 
@@ -265,7 +272,7 @@ export async function POST(request) {
  * @description Get tickets for a user or specific order
  * @query {number} orderId - Filter by order ID
  * @query {number} userId - Filter by user ID
- * @query {string} passId - Get specific ticket by QR code
+ * @query {string} passId - Get specific ticket by pass ID
  * @returns Tickets with details
  */
 export async function GET(request) {
@@ -282,7 +289,7 @@ export async function GET(request) {
     let query = {};
 
     if (passId) {
-      // Get specific ticket by QR code
+      // Get specific ticket by pass ID
       query.pass_id = passId;
     } else if (orderId) {
       // Get tickets for specific order
@@ -371,7 +378,7 @@ export async function GET(request) {
 /**
  * @route PUT /api/tickets
  * @description Validate a ticket (mark as used)
- * @body {string} passId - QR code of the ticket to validate
+ * @body {string} passId - Pass ID of the ticket to validate
  * @returns Updated ticket
  */
 export async function PUT(request) {
@@ -381,11 +388,13 @@ export async function PUT(request) {
     const body = await request.json();
     const { passId } = body;
 
+    console.log(passId);
+
     if (!passId) {
       return NextResponse.json(
         {
           success: false,
-          error: "QR code is required",
+          error: "Pass ID is required",
         },
         { status: 400 }
       );
@@ -393,7 +402,7 @@ export async function PUT(request) {
 
     const { Ticket } = getModels();
 
-    // Find ticket by QR code
+    // Find ticket by pass ID
     const ticket = await Ticket.findOne({ pass_id: passId });
 
     if (!ticket) {

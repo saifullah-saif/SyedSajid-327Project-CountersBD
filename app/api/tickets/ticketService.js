@@ -1,7 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const { createClient } = require("@supabase/supabase-js");
 const { PDFDocument, rgb, StandardFonts } = require("pdf-lib");
-const passId = require("passId");
 const { v4: uuidv4 } = require("uuid");
 
 const prisma = new PrismaClient();
@@ -22,7 +21,7 @@ class TicketService {
   }
 
   /**
-   * Generate a unique 12-character URL-encoded QR code
+   * Generate a unique 12-character URL-encoded pass ID
    * Contains eventId, ticketId, ticketTypeId encoded in a compact format
    */
   generatepassId(eventId, ticketId, ticketTypeId) {
@@ -73,14 +72,14 @@ class TicketService {
           },
         });
 
-        // Generate QR code with the actual ticket ID
+        // Generate pass ID with the actual ticket ID
         const passId = this.generatepassId(
           orderData.eventId,
           ticket.ticket_id,
           ticketTypeId
         );
 
-        // Update ticket with QR code
+        // Update ticket with pass ID
         const updatedTicket = await prisma.tickets.update({
           where: { ticket_id: ticket.ticket_id },
           data: { pass_id: passId },
@@ -136,20 +135,6 @@ class TicketService {
       // Embed font
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-
-      // Generate QR code image
-      const passIdDataURL = await passId.toDataURL(ticket.pass_id, {
-        width: 150,
-        margin: 1,
-        color: {
-          dark: "#000000",
-          light: "#FFFFFF",
-        },
-      });
-
-      // Convert data URL to buffer
-      const passIdBuffer = Buffer.from(passIdDataURL.split(",")[1], "base64");
-      const passIdImage = await pdfDoc.embedPng(passIdBuffer);
 
       // Add dynamic content to PDF
       // firstPage.drawText(event.title, {
@@ -215,20 +200,20 @@ class TicketService {
         });
       }
 
-      // Add QR code
-      firstPage.drawImage(passIdImage, {
+      // Add pass ID text
+      firstPage.drawText("Pass ID:", {
         x: 390,
-        y: height - 779,
-        width: 150,
-        height: 150,
+        y: height - 765,
+        size: 10,
+        font: boldFont,
+        color: rgb(0, 0, 0),
       });
 
-      // Add QR code text
       firstPage.drawText(ticket.pass_id, {
-        x: 420,
-        y: height - 810,
-        size: 12,
-        font: boldFont,
+        x: 390,
+        y: height - 790,
+        size: 14,
+        font: font,
         color: rgb(0, 0, 0),
       });
 
@@ -547,14 +532,14 @@ class TicketService {
             },
           });
 
-          // Generate QR code with the actual ticket ID
+          // Generate pass ID with the actual ticket ID
           const passId = this.generatepassId(
             orderItem.tickettypes.events.event_id,
             ticket.ticket_id,
             orderItem.ticket_type_id
           );
 
-          // Update ticket with QR code
+          // Update ticket with pass ID
           await prisma.tickets.update({
             where: { ticket_id: ticket.ticket_id },
             data: { pass_id: passId },
